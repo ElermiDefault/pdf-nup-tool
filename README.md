@@ -10,7 +10,7 @@ The app runs locally. Uploaded PDFs, thumbnails, and exported files stay on your
 - Create multiple merge tasks before selecting pages.
 - Assign pages to tasks by clicking thumbnails.
 - Use different colors for different tasks.
-- Choose `2合1`, `4合1`, or `8合1` per task.
+- Choose `2 in 1`, `4 in 1`, or `8 in 1` per task.
 - Automatically split non-contiguous pages in a task into multiple continuous export rules.
 - Preserve unselected pages as-is.
 - Export merged pages on A4 output pages.
