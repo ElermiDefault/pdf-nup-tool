@@ -47,31 +47,22 @@ pdf-nup-tool/
 
 ## Install
 
-Backend dependencies:
+Recommended setup:
 
 ```bash
 cd pdf-nup-tool
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r backend/requirements.txt
+./install.command
 ```
 
-You can also use conda or another environment manager. The launcher uses the currently active Python interpreter.
+The installer creates a local `.venv`, installs backend and frontend dependencies, and can install a `pdfnuptool` command into `~/.local/bin`.
 
-Frontend dependencies:
-
-```bash
-cd pdf-nup-tool/frontend
-npm install
-```
+You can also install dependencies manually with venv, conda, or another environment manager.
 
 ## Run
 
 From the project root:
 
 ```bash
-source .venv/bin/activate
 pdfnuptool
 ```
 
@@ -88,6 +79,8 @@ If the command is not available, run the local script directly:
 ```bash
 ./pdfnuptool
 ```
+
+After running `install.command`, `./pdfnuptool` uses the local `.venv` automatically.
 
 ## Manual Development
 
@@ -125,10 +118,10 @@ npm run build
 
 ## Packaging
 
-Create a macOS source preview zip:
+Create a macOS semi-automatic installer zip:
 
 ```bash
-./scripts/package_macos.sh v0.2.0
+./scripts/package_macos.sh v0.3.0
 ```
 
 The archive is written to `dist/` and excludes dependency folders, build output, runtime cache, generated PDFs, and local sample PDFs.
@@ -201,31 +194,22 @@ pdf-nup-tool/
 
 ## 安装
 
-安装后端依赖：
+推荐安装方式：
 
 ```bash
 cd pdf-nup-tool
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r backend/requirements.txt
+./install.command
 ```
 
-你也可以使用 conda 或其他环境管理工具。启动器会使用当前已激活环境里的 Python 解释器。
+安装脚本会创建本地 `.venv`，安装后端和前端依赖，并可选择把 `pdfnuptool` 命令安装到 `~/.local/bin`。
 
-安装前端依赖：
-
-```bash
-cd pdf-nup-tool/frontend
-npm install
-```
+你也可以使用 venv、conda 或其他环境管理工具手动安装依赖。
 
 ## 启动
 
 在项目根目录运行：
 
 ```bash
-source .venv/bin/activate
 pdfnuptool
 ```
 
@@ -242,6 +226,8 @@ pdfnuptool
 ```bash
 ./pdfnuptool
 ```
+
+运行过 `install.command` 后，`./pdfnuptool` 会自动使用本地 `.venv`。
 
 ## 手动开发
 
@@ -279,10 +265,10 @@ npm run build
 
 ## 打包
 
-创建 macOS 源码预览 zip 包：
+创建 macOS 半自动安装 zip 包：
 
 ```bash
-./scripts/package_macos.sh v0.2.0
+./scripts/package_macos.sh v0.3.0
 ```
 
 压缩包会生成到 `dist/`，并排除依赖目录、构建产物、运行缓存、导出 PDF 和本地样例 PDF。

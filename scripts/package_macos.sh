@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="${1:-v0.2.0}"
+VERSION="${1:-v0.3.0}"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST_DIR="$ROOT_DIR/dist"
-PACKAGE_NAME="pdf-nup-tool-${VERSION}-macos-source"
+PACKAGE_NAME="pdf-nup-tool-${VERSION}-macos-semi-auto"
 STAGING_DIR="$DIST_DIR/$PACKAGE_NAME"
 ZIP_PATH="$DIST_DIR/$PACKAGE_NAME.zip"
 
@@ -33,7 +33,7 @@ fi
 cat > "$STAGING_DIR/RELEASE_NOTES.md" <<EOF
 # PDF N-up Tool ${VERSION}
 
-This package is a macOS source preview package.
+This package is a macOS semi-automatic installer package.
 
 ## Requirements
 
@@ -45,20 +45,21 @@ This package is a macOS source preview package.
 ## First-time setup
 
 \`\`\`bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r backend/requirements.txt
-cd frontend
-npm install
-cd ..
+./install.command
 \`\`\`
+
+The installer creates a local \`.venv\`, installs backend and frontend dependencies, and can install a \`pdfnuptool\` command into \`~/.local/bin\`.
 
 ## Run
 
 \`\`\`bash
-source .venv/bin/activate
 ./pdfnuptool
+\`\`\`
+
+If you installed the command and \`~/.local/bin\` is in PATH:
+
+\`\`\`bash
+pdfnuptool
 \`\`\`
 
 The app opens at \`http://127.0.0.1:5173\`.
@@ -67,6 +68,8 @@ Uploaded PDFs and exported files stay on your machine.
 EOF
 
 chmod +x "$STAGING_DIR/pdfnuptool"
+chmod +x "$STAGING_DIR/install.command"
+chmod +x "$STAGING_DIR/scripts/install_macos.sh"
 
 (
   cd "$DIST_DIR"

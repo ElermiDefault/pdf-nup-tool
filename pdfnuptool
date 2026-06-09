@@ -19,6 +19,7 @@ ROOT_DIR = Path(__file__).resolve().parent
 BACKEND_DIR = ROOT_DIR / "backend"
 FRONTEND_DIR = ROOT_DIR / "frontend"
 TMP_DIR = ROOT_DIR / "tmp"
+VENV_PYTHON = ROOT_DIR / ".venv" / "bin" / "python"
 
 HOST = "127.0.0.1"
 BACKEND_PORT = 8010
@@ -207,8 +208,9 @@ def start_heartbeat_server(state: LauncherState) -> ThreadingHTTPServer:
 
 
 def backend_command() -> list[str]:
+    python = str(VENV_PYTHON) if VENV_PYTHON.exists() else sys.executable
     return [
-        sys.executable,
+        python,
         "-m",
         "uvicorn",
         "app.main:app",
