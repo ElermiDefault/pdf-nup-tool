@@ -37,15 +37,17 @@ This package is a macOS source preview package.
 
 ## Requirements
 
-- Conda environment named \`bio\`
 - Python 3.10+
+- A Python virtual environment, conda environment, or equivalent
 - Node.js 20+ or 22+
 - npm
 
 ## First-time setup
 
 \`\`\`bash
-conda activate bio
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
 python -m pip install -r backend/requirements.txt
 cd frontend
 npm install
@@ -55,6 +57,7 @@ cd ..
 ## Run
 
 \`\`\`bash
+source .venv/bin/activate
 ./pdfnuptool
 \`\`\`
 

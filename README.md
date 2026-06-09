@@ -41,21 +41,23 @@ pdf-nup-tool/
 
 - macOS, Linux, or another Unix-like environment
 - Python 3.10+
-- Conda environment named `bio`
+- A Python environment with the backend dependencies installed
 - Node.js 20+ or 22+
 - npm
-
-The current project defaults to the conda environment `bio`.
 
 ## Install
 
 Backend dependencies:
 
 ```bash
-conda activate bio
 cd pdf-nup-tool
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
 python -m pip install -r backend/requirements.txt
 ```
+
+You can also use conda or another environment manager. The launcher uses the currently active Python interpreter.
 
 Frontend dependencies:
 
@@ -69,6 +71,7 @@ npm install
 From the project root:
 
 ```bash
+source .venv/bin/activate
 pdfnuptool
 ```
 
@@ -91,7 +94,7 @@ If the command is not available, run the local script directly:
 Start the backend:
 
 ```bash
-conda activate bio
+source .venv/bin/activate
 cd pdf-nup-tool/backend
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8010 --reload
 ```
@@ -108,7 +111,7 @@ npm run dev -- --host 127.0.0.1 --port 5173
 Backend end-to-end test:
 
 ```bash
-conda activate bio
+source .venv/bin/activate
 cd pdf-nup-tool/backend
 python tests/e2e_backend.py
 ```
@@ -192,21 +195,23 @@ pdf-nup-tool/
 
 - macOS、Linux 或其他类 Unix 环境
 - Python 3.10+
-- 名为 `bio` 的 conda 环境
+- 已安装后端依赖的 Python 环境
 - Node.js 20+ 或 22+
 - npm
-
-当前项目默认使用 conda 环境 `bio`。
 
 ## 安装
 
 安装后端依赖：
 
 ```bash
-conda activate bio
 cd pdf-nup-tool
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
 python -m pip install -r backend/requirements.txt
 ```
+
+你也可以使用 conda 或其他环境管理工具。启动器会使用当前已激活环境里的 Python 解释器。
 
 安装前端依赖：
 
@@ -220,6 +225,7 @@ npm install
 在项目根目录运行：
 
 ```bash
+source .venv/bin/activate
 pdfnuptool
 ```
 
@@ -242,7 +248,7 @@ pdfnuptool
 启动后端：
 
 ```bash
-conda activate bio
+source .venv/bin/activate
 cd pdf-nup-tool/backend
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8010 --reload
 ```
@@ -259,7 +265,7 @@ npm run dev -- --host 127.0.0.1 --port 5173
 后端端到端测试：
 
 ```bash
-conda activate bio
+source .venv/bin/activate
 cd pdf-nup-tool/backend
 python tests/e2e_backend.py
 ```

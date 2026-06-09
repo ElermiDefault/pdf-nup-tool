@@ -10,7 +10,7 @@ FastAPI 后端负责：
 ## 启动方式
 
 ```bash
-conda activate bio
+source .venv/bin/activate
 cd backend
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8010 --reload
 ```
@@ -54,8 +54,7 @@ http://127.0.0.1:8010
 如果需要使用 FastAPI / Starlette 的测试客户端，可额外安装：
 
 ```bash
-conda activate bio
-python -m pip install httpx2
+python -m pip install httpx
 ```
 
 ## 端到端测试
@@ -63,7 +62,7 @@ python -m pip install httpx2
 运行完整后端链路测试。如果本地存在 `samples/sample.pdf`，测试会优先使用它；否则会自动生成一份包含混合尺寸和旋转页面的合成 PDF：
 
 ```bash
-conda activate bio
+source .venv/bin/activate
 cd backend
 python tests/e2e_backend.py
 ```
