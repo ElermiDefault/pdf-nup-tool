@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api import health, pdfs
+from app.core.config import FRONTEND_DIST_DIR
 from app.services.pdf_store import ensure_storage_dirs
 
 
@@ -30,3 +32,5 @@ def on_startup() -> None:
 app.include_router(health.router)
 app.include_router(pdfs.router)
 
+if FRONTEND_DIST_DIR.exists():
+    app.mount("/", StaticFiles(directory=FRONTEND_DIST_DIR, html=True), name="frontend")

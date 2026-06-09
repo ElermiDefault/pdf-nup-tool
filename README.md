@@ -54,7 +54,7 @@ cd pdf-nup-tool
 ./install.command
 ```
 
-The installer creates a local `.venv`, installs backend and frontend dependencies, and can install a `pdfnuptool` command into `~/.local/bin`.
+The installer creates a local `.venv`, installs backend dependencies, builds the frontend static files, and can install a `pdfnuptool` command into `~/.local/bin`.
 
 You can also install dependencies manually with venv, conda, or another environment manager.
 
@@ -68,11 +68,10 @@ pdfnuptool
 
 The launcher starts:
 
-- Backend: `http://127.0.0.1:8010`
-- Frontend: `http://127.0.0.1:5173`
+- App: `http://127.0.0.1:8010`
 - Launcher heartbeat server: `http://127.0.0.1:8123`
 
-It opens the frontend page automatically. Closing the frontend page stops the backend and frontend services after a short delay.
+It opens the app page automatically. Closing the app page stops the local service after a short delay.
 
 If the command is not available, run the local script directly:
 
@@ -99,6 +98,8 @@ cd pdf-nup-tool/frontend
 npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
+In development, Vite proxies `/api` and `/health` to the backend on port `8010`.
+
 ## Tests
 
 Backend end-to-end test:
@@ -118,13 +119,13 @@ npm run build
 
 ## Packaging
 
-Create a macOS semi-automatic installer zip:
+Create a macOS local app packaging preview zip:
 
 ```bash
-./scripts/package_macos.sh v0.3.0
+./scripts/package_macos.sh v0.4.0
 ```
 
-The archive is written to `dist/` and excludes dependency folders, build output, runtime cache, generated PDFs, and local sample PDFs.
+The archive is written to `dist/` and excludes dependency folders, runtime cache, generated PDFs, and local sample PDFs. It includes the built frontend static files.
 
 ## Runtime Files
 
@@ -201,7 +202,7 @@ cd pdf-nup-tool
 ./install.command
 ```
 
-安装脚本会创建本地 `.venv`，安装后端和前端依赖，并可选择把 `pdfnuptool` 命令安装到 `~/.local/bin`。
+安装脚本会创建本地 `.venv`，安装后端依赖，构建前端静态文件，并可选择把 `pdfnuptool` 命令安装到 `~/.local/bin`。
 
 你也可以使用 venv、conda 或其他环境管理工具手动安装依赖。
 
@@ -215,11 +216,10 @@ pdfnuptool
 
 启动器会启动：
 
-- 后端：`http://127.0.0.1:8010`
-- 前端：`http://127.0.0.1:5173`
+- 应用：`http://127.0.0.1:8010`
 - 启动器心跳服务：`http://127.0.0.1:8123`
 
-启动后会自动打开前端页面。关闭前端页面后，后端和前端服务会在短暂延迟后自动停止。
+启动后会自动打开应用页面。关闭应用页面后，本地服务会在短暂延迟后自动停止。
 
 如果系统找不到 `pdfnuptool` 命令，可以在项目根目录直接运行：
 
@@ -246,6 +246,8 @@ cd pdf-nup-tool/frontend
 npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
+开发模式下，Vite 会把 `/api` 和 `/health` 代理到 `8010` 端口的后端服务。
+
 ## 测试
 
 后端端到端测试：
@@ -265,13 +267,13 @@ npm run build
 
 ## 打包
 
-创建 macOS 半自动安装 zip 包：
+创建 macOS 本地 App 包装预备版 zip 包：
 
 ```bash
-./scripts/package_macos.sh v0.3.0
+./scripts/package_macos.sh v0.4.0
 ```
 
-压缩包会生成到 `dist/`，并排除依赖目录、构建产物、运行缓存、导出 PDF 和本地样例 PDF。
+压缩包会生成到 `dist/`，并排除依赖目录、运行缓存、导出 PDF 和本地样例 PDF。压缩包会包含已构建的前端静态文件。
 
 ## 运行时文件
 

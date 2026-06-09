@@ -1,24 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="${1:-v0.3.0}"
+VERSION="${1:-v0.4.0}"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST_DIR="$ROOT_DIR/dist"
-PACKAGE_NAME="pdf-nup-tool-${VERSION}-macos-semi-auto"
+PACKAGE_NAME="pdf-nup-tool-${VERSION}-macos-app-prep"
 STAGING_DIR="$DIST_DIR/$PACKAGE_NAME"
 ZIP_PATH="$DIST_DIR/$PACKAGE_NAME.zip"
 
 rm -rf "$STAGING_DIR" "$ZIP_PATH"
 mkdir -p "$STAGING_DIR"
 
+(
+  cd "$ROOT_DIR/frontend"
+  npm run build
+)
+
 rsync -a "$ROOT_DIR/" "$STAGING_DIR/" \
   --exclude ".git/" \
   --exclude ".DS_Store" \
   --exclude "__pycache__/" \
   --exclude "*.pyc" \
-  --exclude "dist/" \
+  --exclude "/dist/" \
   --exclude "frontend/node_modules/" \
-  --exclude "frontend/dist/" \
   --exclude "tmp/*" \
   --exclude "output/exports/" \
   --exclude "output/*.pdf" \
@@ -33,7 +37,7 @@ fi
 cat > "$STAGING_DIR/RELEASE_NOTES.md" <<EOF
 # PDF N-up Tool ${VERSION}
 
-This package is a macOS semi-automatic installer package.
+This package is a macOS local app packaging preview.
 
 ## Requirements
 
@@ -48,7 +52,7 @@ This package is a macOS semi-automatic installer package.
 ./install.command
 \`\`\`
 
-The installer creates a local \`.venv\`, installs backend and frontend dependencies, and can install a \`pdfnuptool\` command into \`~/.local/bin\`.
+The installer creates a local \`.venv\`, installs backend dependencies, builds frontend static files, and can install a \`pdfnuptool\` command into \`~/.local/bin\`.
 
 ## Run
 
@@ -62,7 +66,7 @@ If you installed the command and \`~/.local/bin\` is in PATH:
 pdfnuptool
 \`\`\`
 
-The app opens at \`http://127.0.0.1:5173\`.
+The app opens at \`http://127.0.0.1:8010\`.
 
 Uploaded PDFs and exported files stay on your machine.
 EOF

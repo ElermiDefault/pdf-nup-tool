@@ -7,7 +7,8 @@ import ThumbnailGrid from './components/ThumbnailGrid.jsx';
 
 const RANGE_COLORS = ['#2364aa', '#c8553d', '#2a7f62', '#8a5aab', '#b37a00', '#00788a'];
 const DEFAULT_LAYOUT = 4;
-const LAUNCHER_URL = import.meta.env.VITE_LAUNCHER_URL;
+const LAUNCHER_URL =
+  import.meta.env.VITE_LAUNCHER_URL ?? `${window.location.protocol}//${window.location.hostname}:8123`;
 
 function buildContinuousRanges(pages) {
   const sortedPages = [...pages].sort((a, b) => a - b);

@@ -18,16 +18,16 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).resolve().parent
 BACKEND_DIR = ROOT_DIR / "backend"
 FRONTEND_DIR = ROOT_DIR / "frontend"
+FRONTEND_DIST_DIR = FRONTEND_DIR / "dist"
 TMP_DIR = ROOT_DIR / "tmp"
 VENV_PYTHON = ROOT_DIR / ".venv" / "bin" / "python"
 
 HOST = "127.0.0.1"
 BACKEND_PORT = 8010
-FRONTEND_PORT = 5173
 LAUNCHER_PORT = 8123
 ALLOWED_FRONTEND_ORIGINS = {
-    f"http://127.0.0.1:{FRONTEND_PORT}",
-    f"http://localhost:{FRONTEND_PORT}",
+    f"http://127.0.0.1:{BACKEND_PORT}",
+    f"http://localhost:{BACKEND_PORT}",
 }
 
 HEARTBEAT_TIMEOUT_SECONDS = 8
@@ -57,7 +57,8 @@ class LauncherState:
 
 def main() -> int:
     ensure_project_root()
-    ensure_ports_available([BACKEND_PORT, FRONTEND_PORT, LAUNCHER_PORT])
+    ensure_frontend_dist()
+    ensure_ports_available([BACKEND_PORT, LAUNCHER_PORT])
     TMP_DIR.mkdir(parents=True, exist_ok=True)
 
     state = LauncherState()
@@ -67,8 +68,6 @@ def main() -> int:
 
     try:
         backend_url = f"http://{HOST}:{BACKEND_PORT}"
-        frontend_url = f"http://{HOST}:{FRONTEND_PORT}"
-        launcher_url = f"http://{HOST}:{LAUNCHER_PORT}"
 
         print("Starting PDF N-up Tool...")
         backend_log = (TMP_DIR / "launcher-backend.log").open("w", encoding="utf-8")
@@ -82,31 +81,8 @@ def main() -> int:
         processes.append(backend)
         wait_for_url(f"{backend_url}/health", "backend", backend, TMP_DIR / "launcher-backend.log")
 
-        frontend_env = os.environ.copy()
-        frontend_env["VITE_API_BASE_URL"] = backend_url
-        frontend_env["VITE_LAUNCHER_URL"] = launcher_url
-        frontend_log = (TMP_DIR / "launcher-frontend.log").open("w", encoding="utf-8")
-        log_files.append(frontend_log)
-        frontend = start_process(
-            [
-                "npm",
-                "run",
-                "dev",
-                "--",
-                "--host",
-                HOST,
-                "--port",
-                str(FRONTEND_PORT),
-            ],
-            cwd=FRONTEND_DIR,
-            env=frontend_env,
-            log_file=frontend_log,
-        )
-        processes.append(frontend)
-        wait_for_url(frontend_url, "frontend", frontend, TMP_DIR / "launcher-frontend.log")
-
-        print(f"Opening {frontend_url}")
-        webbrowser.open(frontend_url)
+        print(f"Opening {backend_url}")
+        webbrowser.open(backend_url)
         print("Close the browser page to stop all services.")
         print("You can also press Ctrl+C here.")
 
@@ -140,6 +116,18 @@ def ensure_project_root() -> None:
             missing.append(str(path))
     if missing:
         raise SystemExit("Missing project files:\n" + "\n".join(missing))
+
+
+def ensure_frontend_dist() -> None:
+    if (FRONTEND_DIST_DIR / "index.html").exists():
+        return
+    raise SystemExit(
+        "Missing frontend build: frontend/dist/index.html\n"
+        "Run ./install.command or run these commands manually:\n"
+        "  cd frontend\n"
+        "  npm install\n"
+        "  npm run build"
+    )
 
 
 def ensure_ports_available(ports: list[int]) -> None:
@@ -194,7 +182,7 @@ def start_heartbeat_server(state: LauncherState) -> ThreadingHTTPServer:
             if origin in ALLOWED_FRONTEND_ORIGINS:
                 self.send_header("Access-Control-Allow-Origin", origin)
             else:
-                self.send_header("Access-Control-Allow-Origin", f"http://{HOST}:{FRONTEND_PORT}")
+                self.send_header("Access-Control-Allow-Origin", f"http://{HOST}:{BACKEND_PORT}")
             self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
             self.send_header("Access-Control-Allow-Headers", "Content-Type")
 

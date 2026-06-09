@@ -58,6 +58,7 @@ echo "Installing frontend dependencies..."
 (
   cd "$FRONTEND_DIR"
   npm install
+  npm run build
 )
 
 chmod +x "$ROOT_DIR/pdfnuptool"
