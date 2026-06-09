@@ -16,7 +16,7 @@ class PdfInfoResponse(BaseModel):
 class MergeRule(BaseModel):
     start_page: int = Field(..., ge=1)
     end_page: int = Field(..., ge=1)
-    layout: int = Field(..., description="N-up layout, for example 2, 4, or 8")
+    layout: int = Field(..., description="N-up layout, for example 2, 3, 4, 5, or 8")
 
 
 class ExportRequest(BaseModel):

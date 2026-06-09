@@ -1,6 +1,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+.venv/
 frontend/node_modules/
 frontend/dist/
 dist/

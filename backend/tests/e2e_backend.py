@@ -41,7 +41,9 @@ def main() -> None:
     _assert_pdf(uploaded_pdf, expected_pages=38)
 
     thumbnails = _render_required_thumbnails(upload.file_id, uploaded_pdf)
+    export_3up = _export_and_verify_3up(uploaded_pdf)
     export_4up = _export_and_verify_4up(uploaded_pdf)
+    export_5up = _export_and_verify_5up(uploaded_pdf)
     export_8up = _export_and_verify_8up(uploaded_pdf)
 
     print("backend e2e ok")
@@ -50,8 +52,13 @@ def main() -> None:
     print("thumbnails:")
     for path in thumbnails:
         print(f"  {path}")
-    print(f"export_4up={export_4up}")
-    print(f"export_8up={export_8up}")
+    for label, path in [
+        ("export_3up", export_3up),
+        ("export_4up", export_4up),
+        ("export_5up", export_5up),
+        ("export_8up", export_8up),
+    ]:
+        print(f"{label}={path}")
 
 
 def _sample_pdf() -> Path:
@@ -128,6 +135,42 @@ def _export_and_verify_4up(uploaded_pdf: Path) -> Path:
     preview = PROJECT_DIR / "tmp" / "e2e-4up-page27.png"
     _render_page(output, page_index=26, output_png=preview)
     _assert_a4_page(output, page_index=26)
+
+    return output
+
+
+def _export_and_verify_3up(uploaded_pdf: Path) -> Path:
+    request = ExportRequest(
+        rules=[MergeRule(start_page=26, end_page=33, layout=3)],
+        page_size="a4",
+        margin=24,
+        gap=12,
+        cell_padding=6,
+    )
+    output = export_pdf_with_rules(uploaded_pdf, request)
+    _assert_pdf(output, expected_pages=33)
+
+    preview = PROJECT_DIR / "tmp" / "e2e-3up-page26.png"
+    _render_page(output, page_index=25, output_png=preview)
+    _assert_a4_page(output, page_index=25)
+
+    return output
+
+
+def _export_and_verify_5up(uploaded_pdf: Path) -> Path:
+    request = ExportRequest(
+        rules=[MergeRule(start_page=26, end_page=33, layout=5)],
+        page_size="a4",
+        margin=24,
+        gap=12,
+        cell_padding=6,
+    )
+    output = export_pdf_with_rules(uploaded_pdf, request)
+    _assert_pdf(output, expected_pages=32)
+
+    preview = PROJECT_DIR / "tmp" / "e2e-5up-page26.png"
+    _render_page(output, page_index=25, output_png=preview)
+    _assert_a4_page(output, page_index=25)
 
     return output
 

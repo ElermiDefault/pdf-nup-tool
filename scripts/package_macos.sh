@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="${1:-v0.4.0}"
+VERSION="${1:-v0.4.1}"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST_DIR="$ROOT_DIR/dist"
 PACKAGE_NAME="pdf-nup-tool-${VERSION}-macos-app-prep"
@@ -19,6 +19,7 @@ mkdir -p "$STAGING_DIR"
 rsync -a "$ROOT_DIR/" "$STAGING_DIR/" \
   --exclude ".git/" \
   --exclude ".DS_Store" \
+  --exclude ".venv/" \
   --exclude "__pycache__/" \
   --exclude "*.pyc" \
   --exclude "/dist/" \

@@ -1,4 +1,4 @@
-const LAYOUT_OPTIONS = [2, 4, 8];
+const LAYOUT_OPTIONS = [2, 3, 4, 5, 8];
 const DEFAULT_LAYOUT = 4;
 
 function buildContinuousRanges(pages) {

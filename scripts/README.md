@@ -5,7 +5,7 @@
 Creates a clean macOS local app packaging preview zip under `dist/`.
 
 ```bash
-./scripts/package_macos.sh v0.4.0
+./scripts/package_macos.sh v0.4.1
 ```
 
 The package excludes Git metadata, Node dependencies, runtime cache, generated PDFs, and local sample PDFs. It includes the built frontend static files.

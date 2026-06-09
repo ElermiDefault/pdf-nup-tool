@@ -8,7 +8,7 @@ from app.core.config import EXPORT_DIR
 from app.models.pdf import ExportRequest, MergeRule
 
 
-ALLOWED_LAYOUTS = {2, 4, 8}
+ALLOWED_LAYOUTS = {2, 3, 4, 5, 8}
 ALLOWED_PAGE_SIZES = {"a4", "a4-landscape", "source"}
 A4_PORTRAIT = (595.0, 842.0)
 
@@ -53,7 +53,7 @@ def _validate_rules(rules: list[MergeRule], page_count: int) -> list[MergeRule]:
         if rule.layout not in ALLOWED_LAYOUTS:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Unsupported layout {rule.layout}. Use 2, 4, or 8.",
+                detail=f"Unsupported layout {rule.layout}. Use 2, 3, 4, 5, or 8.",
             )
         if rule.start_page > rule.end_page:
             raise HTTPException(
@@ -108,27 +108,22 @@ def _append_nup_pages(
     request: ExportRequest,
 ) -> None:
     output_width, output_height = _output_page_size(source_doc, request)
-    rows, cols = _grid_for_layout(rule.layout, output_width, output_height)
     page_numbers = list(range(rule.start_page - 1, rule.end_page))
 
     for chunk_start in range(0, len(page_numbers), rule.layout):
         chunk = page_numbers[chunk_start : chunk_start + rule.layout]
+        cells = _layout_cells(
+            layout=rule.layout,
+            page_width=output_width,
+            page_height=output_height,
+            margin=request.margin,
+            gap=request.gap,
+        )
         output_page = output_doc.new_page(width=output_width, height=output_height)
         output_page.draw_rect(output_page.rect, color=None, fill=(1, 1, 1), overlay=False)
 
         for slot_index, source_page_index in enumerate(chunk):
-            row = slot_index // cols
-            col = slot_index % cols
-            cell = _cell_rect(
-                row=row,
-                col=col,
-                rows=rows,
-                cols=cols,
-                page_width=output_width,
-                page_height=output_height,
-                margin=request.margin,
-                gap=request.gap,
-            )
+            cell = cells[slot_index]
             content_rect = _content_rect(cell, request.cell_padding)
             embed_doc, embed_page_index, source_rect = _embedding_page(
                 source_path,
@@ -186,6 +181,86 @@ def _grid_for_layout(layout: int, page_width: float, page_height: float) -> tupl
         return (2, 4) if is_landscape else (4, 2)
 
     raise ValueError(f"Unsupported layout: {layout}")
+
+
+def _layout_cells(
+    layout: int,
+    page_width: float,
+    page_height: float,
+    margin: float,
+    gap: float,
+) -> list[fitz.Rect]:
+    if layout in {2, 4, 8}:
+        rows, cols = _grid_for_layout(layout, page_width, page_height)
+        return [
+            _cell_rect(
+                row=slot_index // cols,
+                col=slot_index % cols,
+                rows=rows,
+                cols=cols,
+                page_width=page_width,
+                page_height=page_height,
+                margin=margin,
+                gap=gap,
+            )
+            for slot_index in range(layout)
+        ]
+
+    if layout == 3:
+        return _two_band_cells(
+            row_counts=[2, 1],
+            page_width=page_width,
+            page_height=page_height,
+            margin=margin,
+            gap=gap,
+        )
+    if layout == 5:
+        return _two_band_cells(
+            row_counts=[3, 2],
+            page_width=page_width,
+            page_height=page_height,
+            margin=margin,
+            gap=gap,
+        )
+
+    raise ValueError(f"Unsupported layout: {layout}")
+
+
+def _two_band_cells(
+    row_counts: list[int],
+    page_width: float,
+    page_height: float,
+    margin: float,
+    gap: float,
+) -> list[fitz.Rect]:
+    rows = len(row_counts)
+    usable_width = page_width - (margin * 2)
+    usable_height = page_height - (margin * 2) - (gap * (rows - 1))
+
+    if usable_width <= 0 or usable_height <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Margin and gap are too large for the output page size.",
+        )
+
+    cell_height = usable_height / rows
+    cells = []
+    for row_index, cols in enumerate(row_counts):
+        row_gap_total = gap * (cols - 1)
+        row_usable_width = usable_width - row_gap_total
+        if row_usable_width <= 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Margin and gap are too large for the output page size.",
+            )
+        cell_width = row_usable_width / cols
+        y0 = margin + row_index * (cell_height + gap)
+
+        for col_index in range(cols):
+            x0 = margin + col_index * (cell_width + gap)
+            cells.append(fitz.Rect(x0, y0, x0 + cell_width, y0 + cell_height))
+
+    return cells
 
 
 def _cell_rect(
