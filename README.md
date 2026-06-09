@@ -1,5 +1,7 @@
 # PDF N-up Tool
 
+[English](#pdf-n-up-tool) | [中文](#中文说明)
+
 PDF N-up Tool is a local web app for selectively merging PDF pages into N-up output pages. You can upload a PDF, create one or more merge tasks, assign pages from the thumbnail grid, choose `2-up`, `4-up`, or `8-up` per task, and export a new PDF.
 
 The app runs locally. Uploaded PDFs, thumbnails, and exported files stay on your machine.
@@ -133,5 +135,145 @@ The following are generated locally and ignored by Git:
 PDF samples are ignored by default to avoid publishing private documents.
 
 ## License
+
+MIT
+
+---
+
+# 中文说明
+
+PDF N-up Tool 是一个本地运行的 PDF 页面合并工具。你可以上传一份 PDF，在缩略图网格中创建多个合并任务，为每个任务选择 `2合1`、`4合1` 或 `8合1`，然后导出新的 PDF。
+
+整个应用在本机运行。上传的 PDF、缩略图和导出的文件都保留在你的电脑上，不会上传到公网服务器。
+
+## 功能
+
+- 上传 PDF，并以缩略图形式预览每一页。
+- 先创建多个合并任务，再为任务选择页面。
+- 点击缩略图即可把页面分配到当前任务。
+- 不同合并任务使用不同颜色标注。
+- 每个任务可以独立选择 `2合1`、`4合1` 或 `8合1`。
+- 如果同一个任务里的页面不连续，会自动拆成多个连续导出规则。
+- 未选中的页面会按原样保留。
+- 合并后的页面默认使用 A4 输出。
+- 支持混合页面尺寸、横竖方向和 PDF 旋转标记。
+
+## 技术栈
+
+- 前端：React + Vite
+- 后端：Python + FastAPI + PyMuPDF + pypdf + uvicorn
+- 启动器：Python 脚本，同时启动前端和后端
+
+## 项目结构
+
+```text
+pdf-nup-tool/
+  backend/          FastAPI 后端和 PDF 处理逻辑
+  frontend/         React + Vite 前端
+  docs/             API 和架构说明
+  output/           运行时 PDF 导出目录
+  samples/          本地测试 PDF 目录
+  tmp/              上传文件、缩略图、日志和临时文件
+  pdfnuptool        一键启动脚本
+```
+
+## 环境要求
+
+- macOS、Linux 或其他类 Unix 环境
+- Python 3.10+
+- 名为 `bio` 的 conda 环境
+- Node.js 20+ 或 22+
+- npm
+
+当前项目默认使用 conda 环境 `bio`。
+
+## 安装
+
+安装后端依赖：
+
+```bash
+conda activate bio
+cd pdf-nup-tool
+python -m pip install -r backend/requirements.txt
+```
+
+安装前端依赖：
+
+```bash
+cd pdf-nup-tool/frontend
+npm install
+```
+
+## 启动
+
+在项目根目录运行：
+
+```bash
+pdfnuptool
+```
+
+启动器会启动：
+
+- 后端：`http://127.0.0.1:8010`
+- 前端：`http://127.0.0.1:5173`
+- 启动器心跳服务：`http://127.0.0.1:8123`
+
+启动后会自动打开前端页面。关闭前端页面后，后端和前端服务会在短暂延迟后自动停止。
+
+如果系统找不到 `pdfnuptool` 命令，可以在项目根目录直接运行：
+
+```bash
+./pdfnuptool
+```
+
+## 手动开发
+
+启动后端：
+
+```bash
+conda activate bio
+cd pdf-nup-tool/backend
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8010 --reload
+```
+
+另开一个终端启动前端：
+
+```bash
+cd pdf-nup-tool/frontend
+npm run dev -- --host 127.0.0.1 --port 5173
+```
+
+## 测试
+
+后端端到端测试：
+
+```bash
+conda activate bio
+cd pdf-nup-tool/backend
+python tests/e2e_backend.py
+```
+
+前端构建检查：
+
+```bash
+cd pdf-nup-tool/frontend
+npm run build
+```
+
+## 运行时文件
+
+以下文件和目录会在本地运行时生成，并已被 Git 忽略：
+
+- `tmp/uploads/`
+- `tmp/thumbnails/`
+- `tmp/launcher-*.log`
+- `output/exports/`
+- `frontend/dist/`
+- `frontend/node_modules/`
+- `samples/*.pdf`
+
+PDF 样例文件默认被忽略，避免误把私人文档发布到仓库。
+
+## 许可证
 
 MIT
