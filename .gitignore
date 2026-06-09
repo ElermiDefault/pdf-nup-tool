@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+*$py.class
+frontend/node_modules/
+frontend/dist/
+tmp/*
+!tmp/.gitkeep
+!tmp/README.md
+output/exports/
+output/*.pdf
+samples/*.pdf
+.DS_Store
