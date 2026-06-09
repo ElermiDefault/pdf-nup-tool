@@ -120,6 +120,16 @@ cd pdf-nup-tool/frontend
 npm run build
 ```
 
+## Packaging
+
+Create a macOS source preview zip:
+
+```bash
+./scripts/package_macos.sh v0.2.0
+```
+
+The archive is written to `dist/` and excludes dependency folders, build output, runtime cache, generated PDFs, and local sample PDFs.
+
 ## Runtime Files
 
 The following are generated locally and ignored by Git:
@@ -130,6 +140,7 @@ The following are generated locally and ignored by Git:
 - `output/exports/`
 - `frontend/dist/`
 - `frontend/node_modules/`
+- `dist/`
 - `samples/*.pdf`
 
 PDF samples are ignored by default to avoid publishing private documents.
@@ -260,6 +271,16 @@ cd pdf-nup-tool/frontend
 npm run build
 ```
 
+## 打包
+
+创建 macOS 源码预览 zip 包：
+
+```bash
+./scripts/package_macos.sh v0.2.0
+```
+
+压缩包会生成到 `dist/`，并排除依赖目录、构建产物、运行缓存、导出 PDF 和本地样例 PDF。
+
 ## 运行时文件
 
 以下文件和目录会在本地运行时生成，并已被 Git 忽略：
@@ -270,6 +291,7 @@ npm run build
 - `output/exports/`
 - `frontend/dist/`
 - `frontend/node_modules/`
+- `dist/`
 - `samples/*.pdf`
 
 PDF 样例文件默认被忽略，避免误把私人文档发布到仓库。

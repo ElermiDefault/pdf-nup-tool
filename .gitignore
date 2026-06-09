@@ -3,6 +3,7 @@ __pycache__/
 *$py.class
 frontend/node_modules/
 frontend/dist/
+dist/
 tmp/*
 !tmp/.gitkeep
 !tmp/README.md
