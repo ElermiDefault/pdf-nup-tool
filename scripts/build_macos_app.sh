@@ -106,11 +106,25 @@ APP_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 PROJECT_DIR="$(cd "$APP_DIR/.." && pwd)"
 LOG_DIR="$PROJECT_DIR/tmp"
 LOG_FILE="$LOG_DIR/app-launcher.log"
+PYTHON="$PROJECT_DIR/.venv/bin/python"
 
 mkdir -p "$LOG_DIR"
 cd "$PROJECT_DIR"
 
-exec "$PROJECT_DIR/pdfnuptool" >>"$LOG_FILE" 2>&1
+show_error() {
+  local message="$1"
+  echo "$message" >>"$LOG_FILE"
+  if command -v osascript >/dev/null 2>&1; then
+    osascript -e "display dialog \"$message\" buttons {\"OK\"} default button \"OK\" with title \"PDF N-up Tool\""
+  fi
+}
+
+if [[ ! -x "$PYTHON" ]]; then
+  show_error "Missing Python environment. Please run install.command first, then reopen PDF N-up Tool.app."
+  exit 1
+fi
+
+exec "$PYTHON" "$PROJECT_DIR/pdfnuptool" >>"$LOG_FILE" 2>&1
 EOF
 
 chmod +x "$EXECUTABLE_PATH"
