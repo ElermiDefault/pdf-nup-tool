@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="${1:-v0.4.1}"
+VERSION="${1:-v0.5.0}"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST_DIR="$ROOT_DIR/dist"
-PACKAGE_NAME="pdf-nup-tool-${VERSION}-macos-app-prep"
+PACKAGE_NAME="pdf-nup-tool-${VERSION}-macos-app-preview"
 STAGING_DIR="$DIST_DIR/$PACKAGE_NAME"
 ZIP_PATH="$DIST_DIR/$PACKAGE_NAME.zip"
 
@@ -15,6 +15,8 @@ mkdir -p "$STAGING_DIR"
   cd "$ROOT_DIR/frontend"
   npm run build
 )
+
+"$ROOT_DIR/scripts/build_macos_app.sh" "${VERSION#v}" >/dev/null
 
 rsync -a "$ROOT_DIR/" "$STAGING_DIR/" \
   --exclude ".git/" \
@@ -57,6 +59,14 @@ The installer creates a local \`.venv\`, installs backend dependencies, builds f
 
 ## Run
 
+Double-click:
+
+\`\`\`text
+PDF N-up Tool.app
+\`\`\`
+
+Or run from Terminal:
+
 \`\`\`bash
 ./pdfnuptool
 \`\`\`
@@ -68,6 +78,8 @@ pdfnuptool
 \`\`\`
 
 The app opens at \`http://127.0.0.1:8010\`.
+
+This preview app must stay in the project folder next to \`pdfnuptool\`, \`backend/\`, and \`frontend/\`.
 
 Uploaded PDFs and exported files stay on your machine.
 EOF

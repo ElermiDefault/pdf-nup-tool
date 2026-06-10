@@ -61,6 +61,11 @@ echo "Installing frontend dependencies..."
   npm run build
 )
 
+if [[ "$(uname -s)" == "Darwin" ]] && command -v sips >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1; then
+  echo "Building macOS app wrapper..."
+  "$ROOT_DIR/scripts/build_macos_app.sh" >/dev/null
+fi
+
 chmod +x "$ROOT_DIR/pdfnuptool"
 
 should_install_command=false
@@ -94,6 +99,9 @@ fi
 
 echo
 echo "Installation complete."
+echo "Double-click from this project folder:"
+echo "  PDF N-up Tool.app"
+echo
 echo "Run from this project folder:"
 echo "  ./pdfnuptool"
 echo
