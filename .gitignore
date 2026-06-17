@@ -3,6 +3,7 @@ __pycache__/
 *$py.class
 .venv/
 PDF N-up Tool.app/
+build/
 frontend/node_modules/
 frontend/dist/
 dist/

@@ -39,7 +39,13 @@ pdf-nup-tool/
   pdfnuptool        One-command launcher
 ```
 
-## Requirements
+## Release App Requirements
+
+- macOS 11+
+
+The v0.6.0 macOS app preview is self-contained. It does not require users to install Python, Node.js, npm, or a virtual environment.
+
+## Source Development Requirements
 
 - macOS, Linux, or another Unix-like environment
 - Python 3.10+
@@ -47,7 +53,7 @@ pdf-nup-tool/
 - Node.js 20+ or 22+
 - npm
 
-## Install
+## Install From Source
 
 Recommended setup:
 
@@ -60,7 +66,29 @@ The installer creates a local `.venv`, installs backend dependencies, builds the
 
 You can also install dependencies manually with venv, conda, or another environment manager.
 
-## Run
+## Run Release App
+
+Download and unzip the macOS self-contained package, then double-click:
+
+```text
+PDF N-up Tool.app
+```
+
+The app opens:
+
+```text
+http://127.0.0.1:8010
+```
+
+Uploaded PDFs, thumbnails, logs, and exported files are stored locally under:
+
+```text
+~/Library/Application Support/PDF N-up Tool
+```
+
+This preview build is unsigned. If macOS blocks it, right-click the app and choose Open.
+
+## Run From Source
 
 After running `install.command`, double-click:
 
@@ -81,7 +109,7 @@ The launcher starts:
 
 It opens the app page automatically. Closing the app page stops the local service after a short delay.
 
-This preview `.app` is a wrapper around the local project. Keep `PDF N-up Tool.app` in the project folder next to `pdfnuptool`, `backend/`, and `frontend/`.
+This source-built `.app` is a wrapper around the local project. Keep `PDF N-up Tool.app` in the project folder next to `pdfnuptool`, `backend/`, and `frontend/`.
 
 If the command is not available, run the local script directly:
 
@@ -129,13 +157,14 @@ npm run build
 
 ## Packaging
 
-Create a macOS app preview zip:
+Create a self-contained macOS app preview zip:
 
 ```bash
-./scripts/package_macos.sh v0.5.0
+python -m pip install pyinstaller
+./scripts/build_pyinstaller_app.sh v0.6.0
 ```
 
-The archive is written to `dist/` and excludes dependency folders, runtime cache, generated PDFs, and local sample PDFs. It includes the built frontend static files and `PDF N-up Tool.app`.
+The archive is written to `dist/` and contains a self-contained `PDF N-up Tool.app`.
 
 ## Runtime Files
 
@@ -197,7 +226,13 @@ pdf-nup-tool/
   pdfnuptool        一键启动脚本
 ```
 
-## 环境要求
+## Release App 环境要求
+
+- macOS 11+
+
+v0.6.0 macOS App 预览版是自包含应用。普通用户不需要安装 Python、Node.js、npm 或虚拟环境。
+
+## 源码开发环境要求
 
 - macOS、Linux 或其他类 Unix 环境
 - Python 3.10+
@@ -205,7 +240,7 @@ pdf-nup-tool/
 - Node.js 20+ 或 22+
 - npm
 
-## 安装
+## 从源码安装
 
 推荐安装方式：
 
@@ -218,7 +253,29 @@ cd pdf-nup-tool
 
 你也可以使用 venv、conda 或其他环境管理工具手动安装依赖。
 
-## 启动
+## 启动 Release App
+
+下载并解压 macOS 自包含包后，双击：
+
+```text
+PDF N-up Tool.app
+```
+
+应用会打开：
+
+```text
+http://127.0.0.1:8010
+```
+
+上传 PDF、缩略图、日志和导出文件会保存在本机：
+
+```text
+~/Library/Application Support/PDF N-up Tool
+```
+
+当前预览版未签名。如果 macOS 阻止打开，请右键点击 App 并选择“打开”。
+
+## 从源码启动
 
 运行过 `install.command` 后，双击：
 
@@ -239,7 +296,7 @@ pdfnuptool
 
 启动后会自动打开应用页面。关闭应用页面后，本地服务会在短暂延迟后自动停止。
 
-当前 `.app` 是本地项目的预览版 wrapper，需要和 `pdfnuptool`、`backend/`、`frontend/` 放在同一个项目目录中。
+源码构建出的 `.app` 是本地项目的 wrapper，需要和 `pdfnuptool`、`backend/`、`frontend/` 放在同一个项目目录中。
 
 如果系统找不到 `pdfnuptool` 命令，可以在项目根目录直接运行：
 
@@ -287,13 +344,14 @@ npm run build
 
 ## 打包
 
-创建 macOS App 预览版 zip 包：
+创建 macOS 自包含 App 预览版 zip 包：
 
 ```bash
-./scripts/package_macos.sh v0.5.0
+python -m pip install pyinstaller
+./scripts/build_pyinstaller_app.sh v0.6.0
 ```
 
-压缩包会生成到 `dist/`，并排除依赖目录、运行缓存、导出 PDF 和本地样例 PDF。压缩包会包含已构建的前端静态文件和 `PDF N-up Tool.app`。
+压缩包会生成到 `dist/`，并包含自包含的 `PDF N-up Tool.app`。
 
 ## 运行时文件
 
