@@ -1,5 +1,16 @@
 # Scripts
 
+## `build_dmg.sh`
+
+Creates a macOS DMG release package under `dist/`.
+
+```bash
+python -m pip install pyinstaller
+./scripts/build_dmg.sh v1.0.0
+```
+
+The DMG contains `PDF N-up Tool.app`, an `Applications` shortcut, `README.md`, and `LICENSE`.
+
 ## `package_macos.sh`
 
 Creates the older source-wrapper macOS app preview zip under `dist/`.

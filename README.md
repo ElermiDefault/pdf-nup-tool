@@ -43,7 +43,7 @@ pdf-nup-tool/
 
 - macOS 11+
 
-The v0.6.0 macOS app preview is self-contained. It does not require users to install Python, Node.js, npm, or a virtual environment.
+The v1.0.0 macOS release app is self-contained. It does not require users to install Python, Node.js, npm, or a virtual environment.
 
 ## Source Development Requirements
 
@@ -68,7 +68,7 @@ You can also install dependencies manually with venv, conda, or another environm
 
 ## Run Release App
 
-Download and unzip the macOS self-contained package, then double-click:
+Download the macOS DMG, open it, and drag the app to `Applications`:
 
 ```text
 PDF N-up Tool.app
@@ -86,7 +86,7 @@ Uploaded PDFs, thumbnails, logs, and exported files are stored locally under:
 ~/Library/Application Support/PDF N-up Tool
 ```
 
-This preview build is unsigned. If macOS blocks it, right-click the app and choose Open.
+This build is not signed with an Apple Developer ID and is not notarized. If macOS blocks it on first launch, right-click the app and choose Open.
 
 ## Run From Source
 
@@ -157,14 +157,20 @@ npm run build
 
 ## Packaging
 
-Create a self-contained macOS app preview zip:
+Create a macOS DMG release:
 
 ```bash
 python -m pip install pyinstaller
-./scripts/build_pyinstaller_app.sh v0.6.0
+./scripts/build_dmg.sh v1.0.0
 ```
 
-The archive is written to `dist/` and contains a self-contained `PDF N-up Tool.app`.
+The DMG is written to `dist/` and contains a self-contained `PDF N-up Tool.app` plus an `Applications` shortcut.
+
+You can also create the raw self-contained app zip:
+
+```bash
+./scripts/build_pyinstaller_app.sh v1.0.0
+```
 
 ## Runtime Files
 
@@ -230,7 +236,7 @@ pdf-nup-tool/
 
 - macOS 11+
 
-v0.6.0 macOS App 预览版是自包含应用。普通用户不需要安装 Python、Node.js、npm 或虚拟环境。
+v1.0.0 macOS 版是自包含应用。普通用户不需要安装 Python、Node.js、npm 或虚拟环境。
 
 ## 源码开发环境要求
 
@@ -255,7 +261,7 @@ cd pdf-nup-tool
 
 ## 启动 Release App
 
-下载并解压 macOS 自包含包后，双击：
+下载 macOS DMG，打开后把应用拖到 `Applications`：
 
 ```text
 PDF N-up Tool.app
@@ -273,7 +279,7 @@ http://127.0.0.1:8010
 ~/Library/Application Support/PDF N-up Tool
 ```
 
-当前预览版未签名。如果 macOS 阻止打开，请右键点击 App 并选择“打开”。
+当前版本没有 Apple Developer ID 签名，也没有经过 Apple 公证。如果 macOS 首次启动时阻止打开，请右键点击 App 并选择“打开”。
 
 ## 从源码启动
 
@@ -344,14 +350,20 @@ npm run build
 
 ## 打包
 
-创建 macOS 自包含 App 预览版 zip 包：
+创建 macOS DMG 正式分发包：
 
 ```bash
 python -m pip install pyinstaller
-./scripts/build_pyinstaller_app.sh v0.6.0
+./scripts/build_dmg.sh v1.0.0
 ```
 
-压缩包会生成到 `dist/`，并包含自包含的 `PDF N-up Tool.app`。
+DMG 会生成到 `dist/`，并包含自包含的 `PDF N-up Tool.app` 和 `Applications` 快捷入口。
+
+也可以创建原始自包含 App zip 包：
+
+```bash
+./scripts/build_pyinstaller_app.sh v1.0.0
+```
 
 ## 运行时文件
 
