@@ -30,6 +30,7 @@ need_command() {
 
 need_command npm
 need_command "$PYTHON"
+need_command codesign
 
 if ! "$PYTHON" -c "import PyInstaller" >/dev/null 2>&1; then
   die "PyInstaller is not installed. Install it in the active Python environment: python -m pip install pyinstaller"
@@ -115,6 +116,8 @@ data["CFBundleVersion"] = version
 data["NSHighResolutionCapable"] = True
 plist_path.write_bytes(plistlib.dumps(data))
 PY
+
+codesign --force --deep --sign - "$PYINSTALLER_APP" >/dev/null
 
 cp -R "$PYINSTALLER_APP" "$STAGING_DIR/${APP_NAME}.app"
 cp "$ROOT_DIR/LICENSE" "$STAGING_DIR/LICENSE"
