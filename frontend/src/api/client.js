@@ -31,6 +31,17 @@ export async function exportPdf(fileId, payload) {
   };
 }
 
+export async function exportPdfBatch(payload) {
+  const response = await apiClient.post('/api/pdfs/export', payload, {
+    responseType: 'blob',
+  });
+
+  return {
+    blob: response.data,
+    filename: filenameFromDisposition(response.headers['content-disposition']) ?? 'merged.pdf',
+  };
+}
+
 export function thumbnailUrl(fileId, pageNumber, width = 240) {
   const url = new URL(`/api/pdfs/${fileId}/pages/${pageNumber}/thumbnail`, API_BASE_URL);
   url.searchParams.set('width', String(width));

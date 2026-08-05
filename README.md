@@ -2,20 +2,21 @@
 
 [English](#pdf-n-up-tool) | [中文](#中文说明)
 
-PDF N-up Tool is a local web app for selectively merging PDF pages into N-up output pages. You can upload a PDF, create one or more merge tasks, assign pages from the thumbnail grid, choose `2-up`, `3-up`, `4-up`, `5-up`, or `8-up` per task, and export a new PDF.
+PDF N-up Tool is a local web app for selectively merging PDF pages into N-up output pages. You can upload one or more PDFs, reorder pages in a shared thumbnail queue, create one or more merge tasks, choose `2-up`, `3-up`, `4-up`, `5-up`, or `8-up` per task, and export a new PDF.
 
 The app runs locally. Uploaded PDFs, thumbnails, and exported files stay on your machine.
 
 ## Features
 
-- Upload a PDF and preview every page as a thumbnail.
+- Upload one or more PDFs and preview every page as a thumbnail.
+- Reorder single pages, or drag pages from the same merge task as a group.
 - Create multiple merge tasks before selecting pages.
 - Assign pages to tasks by clicking thumbnails.
 - Use different colors for different tasks.
 - Choose `2 in 1`, `3 in 1`, `4 in 1`, `5 in 1`, or `8 in 1` per task.
 - Use non-uniform layouts: `3 in 1` places two pages on top and one below; `5 in 1` places three pages on top and two below.
 - Automatically split non-contiguous pages in a task into multiple continuous export rules.
-- Preserve unselected pages as-is.
+- Preserve pages outside merge tasks as-is, using the current reordered page queue.
 - Export merged pages on A4 output pages.
 - Handle PDFs with mixed page sizes and rotation metadata.
 
@@ -24,6 +25,7 @@ The app runs locally. Uploaded PDFs, thumbnails, and exported files stay on your
 - Frontend: React + Vite
 - Backend: Python + FastAPI + PyMuPDF + pypdf + uvicorn
 - Launcher: Python script that starts the local app service
+- Native shell: Swift + WKWebView macOS window
 
 ## Project Structure
 
@@ -87,6 +89,19 @@ Uploaded PDFs, thumbnails, logs, and exported files are stored locally under:
 ```
 
 This build is not signed with an Apple Developer ID and is not notarized. If macOS blocks it on first launch, right-click the app and choose Open.
+
+## Native WebView App
+
+The project also includes a Swift macOS shell that embeds the existing React UI in `WKWebView`. This keeps the Python/FastAPI/PyMuPDF backend, but the user sees a normal macOS app window instead of a separate browser tab.
+
+Build the native WebView DMG:
+
+```bash
+python -m pip install pyinstaller
+./scripts/build_native_dmg.sh v1.1.0
+```
+
+The native package is written to `dist/pdf-nup-tool-v1.1.0-macos-native.dmg`.
 
 ## Run From Source
 
@@ -172,6 +187,12 @@ You can also create the raw self-contained app zip:
 ./scripts/build_pyinstaller_app.sh v1.0.0
 ```
 
+Create the Swift WebView native shell DMG:
+
+```bash
+./scripts/build_native_dmg.sh v1.1.0
+```
+
 ## Runtime Files
 
 The following are generated locally and ignored by Git:
@@ -195,20 +216,21 @@ MIT
 
 # 中文说明
 
-PDF N-up Tool 是一个本地运行的 PDF 页面合并工具。你可以上传一份 PDF，在缩略图网格中创建多个合并任务，为每个任务选择 `2合1`、`3合1`、`4合1`、`5合1` 或 `8合1`，然后导出新的 PDF。
+PDF N-up Tool 是一个本地运行的 PDF 页面合并工具。你可以上传一份或多份 PDF，在共享缩略图队列中调整页面顺序，创建多个合并任务，为每个任务选择 `2合1`、`3合1`、`4合1`、`5合1` 或 `8合1`，然后导出新的 PDF。
 
 整个应用在本机运行。上传的 PDF、缩略图和导出的文件都保留在你的电脑上，不会上传到公网服务器。
 
 ## 功能
 
-- 上传 PDF，并以缩略图形式预览每一页。
+- 上传一份或多份 PDF，并以缩略图形式预览每一页。
+- 支持拖动单页排序，也支持把同一合并任务里的页面作为一组拖动。
 - 先创建多个合并任务，再为任务选择页面。
 - 点击缩略图即可把页面分配到当前任务。
 - 不同合并任务使用不同颜色标注。
 - 每个任务可以独立选择 `2合1`、`3合1`、`4合1`、`5合1` 或 `8合1`。
 - 支持非均匀布局：`3合1` 为上方两页、下方一页；`5合1` 为上方三页、下方两页。
 - 如果同一个任务里的页面不连续，会自动拆成多个连续导出规则。
-- 未选中的页面会按原样保留。
+- 未加入合并任务的页面会按当前排序原样保留。
 - 合并后的页面默认使用 A4 输出。
 - 支持混合页面尺寸、横竖方向和 PDF 旋转标记。
 
@@ -217,6 +239,7 @@ PDF N-up Tool 是一个本地运行的 PDF 页面合并工具。你可以上传�
 - 前端：React + Vite
 - 后端：Python + FastAPI + PyMuPDF + pypdf + uvicorn
 - 启动器：Python 脚本，启动本地应用服务
+- 原生外壳：Swift + WKWebView macOS 窗口
 
 ## 项目结构
 
@@ -280,6 +303,19 @@ http://127.0.0.1:8010
 ```
 
 当前版本没有 Apple Developer ID 签名，也没有经过 Apple 公证。如果 macOS 首次启动时阻止打开，请右键点击 App 并选择“打开”。
+
+## 原生 WebView App
+
+项目也包含一个 Swift macOS 外壳，把现有 React UI 嵌入 `WKWebView`。它仍然使用 Python/FastAPI/PyMuPDF 后端，但用户看到的是普通 macOS App 窗口，而不是单独打开浏览器标签页。
+
+构建原生 WebView DMG：
+
+```bash
+python -m pip install pyinstaller
+./scripts/build_native_dmg.sh v1.1.0
+```
+
+原生分发包会生成到 `dist/pdf-nup-tool-v1.1.0-macos-native.dmg`。
 
 ## 从源码启动
 
@@ -363,6 +399,12 @@ DMG 会生成到 `dist/`，并包含自包含的 `PDF N-up Tool.app` 和 `Applic
 
 ```bash
 ./scripts/build_pyinstaller_app.sh v1.0.0
+```
+
+创建 Swift WebView 原生外壳 DMG：
+
+```bash
+./scripts/build_native_dmg.sh v1.1.0
 ```
 
 ## 运行时文件

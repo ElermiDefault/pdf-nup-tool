@@ -1,16 +1,15 @@
 const LAYOUT_OPTIONS = [2, 3, 4, 5, 8];
-const DEFAULT_LAYOUT = 4;
 
-function buildContinuousRanges(pages) {
-  const sortedPages = [...pages].sort((a, b) => a - b);
+function buildContinuousRanges(numbers) {
+  const sortedNumbers = [...numbers].sort((a, b) => a - b);
   const ranges = [];
 
-  for (const page of sortedPages) {
+  for (const number of sortedNumbers) {
     const previous = ranges[ranges.length - 1];
-    if (previous && page === previous.end + 1) {
-      previous.end = page;
+    if (previous && number === previous.end + 1) {
+      previous.end = number;
     } else {
-      ranges.push({ start: page, end: page });
+      ranges.push({ start: number, end: number });
     }
   }
 
@@ -25,6 +24,7 @@ function SelectionSummary({
   onCreateTask,
   onDeleteTask,
   onLayoutChange,
+  pageItems,
   tasks,
 }) {
   return (
@@ -34,8 +34,8 @@ function SelectionSummary({
           <h2>Merge tasks</h2>
           <p>
             {tasks.length === 0
-              ? "Create a task, then click pages to assign them."
-              : `${tasks.length} task${tasks.length > 1 ? "s" : ""}`}
+              ? 'Create a task, then click pages to assign them.'
+              : `${tasks.length} task${tasks.length > 1 ? 's' : ''}`}
           </p>
         </div>
 
@@ -54,7 +54,7 @@ function SelectionSummary({
       </div>
 
       {tasks.length === 0 ? (
-        <div className="empty-inline">No merge tasks yet.</div>
+        <div className="empty-inline">No merge tasks yet. Export still works for combining and reordering pages.</div>
       ) : (
         <>
           <div className="task-list">
@@ -65,6 +65,7 @@ function SelectionSummary({
                 onActivateTask={onActivateTask}
                 onDeleteTask={onDeleteTask}
                 onLayoutChange={onLayoutChange}
+                pageItems={pageItems}
                 task={task}
                 taskNumber={index + 1}
               />
@@ -72,15 +73,11 @@ function SelectionSummary({
           </div>
 
           <div className="rules-preview">
-            <div className="rules-preview-title">Generated rules</div>
+            <div className="rules-preview-title">Generated ordered rules</div>
             <pre>{JSON.stringify(exportRules, null, 2)}</pre>
           </div>
 
-          <button
-            type="button"
-            className="secondary-button clear-button"
-            onClick={onClear}
-          >
+          <button type="button" className="secondary-button clear-button" onClick={onClear}>
             Clear all tasks
           </button>
         </>
@@ -94,25 +91,36 @@ function MergeTask({
   onActivateTask,
   onDeleteTask,
   onLayoutChange,
+  pageItems,
   task,
   taskNumber,
 }) {
-  const ranges = buildContinuousRanges(task.pages);
+  const pageById = new Map(pageItems.map((page, index) => [page.id, { ...page, position: index + 1 }]));
+  const selectedPages = task.pageIds.map((pageId) => pageById.get(pageId)).filter(Boolean);
+  const ranges = buildContinuousRanges(selectedPages.map((page) => page.position));
   const pageText =
     ranges.length === 0
-      ? "No pages assigned"
+      ? 'No pages assigned'
       : ranges
           .map((range) =>
             range.start === range.end
-              ? `Page ${range.start}`
-              : `Pages ${range.start}-${range.end}`
+              ? `Position ${range.start}`
+              : `Positions ${range.start}-${range.end}`,
           )
-          .join(", ");
+          .join(', ');
+  const sourceText =
+    selectedPages.length === 0
+      ? ''
+      : selectedPages
+          .slice(0, 3)
+          .map((page) => `${page.filename} p.${page.pageNumber}`)
+          .join(', ');
+  const overflowText = selectedPages.length > 3 ? ` +${selectedPages.length - 3} more` : '';
 
   return (
     <article
-      className={`merge-task${isActive ? " is-active" : ""}`}
-      style={{ "--range-color": task.color }}
+      className={`merge-task${isActive ? ' is-active' : ''}`}
+      style={{ '--range-color': task.color }}
     >
       <div className="task-main">
         <button
@@ -122,23 +130,19 @@ function MergeTask({
           onClick={() => onActivateTask(task.id)}
         >
           <span className="task-color" />
-          <span>
+          <span className="task-label">
             <strong>Task {taskNumber}</strong>
             <span>{pageText}</span>
+            {sourceText ? <span>{sourceText}{overflowText}</span> : null}
+            {selectedPages.length > 1 ? <em>Grouped move</em> : null}
           </span>
         </button>
       </div>
 
-      <div
-        className="layout-control"
-        role="group"
-        aria-label={`Layout for task ${taskNumber}`}
-      >
+      <div className="layout-control" role="group" aria-label={`Layout for task ${taskNumber}`}>
         {LAYOUT_OPTIONS.map((option) => (
           <button
-            className={`layout-option${
-              task.layout === option ? " is-active" : ""
-            }`}
+            className={`layout-option${task.layout === option ? ' is-active' : ''}`}
             key={option}
             type="button"
             onClick={() => onLayoutChange(task.id, option)}
@@ -148,11 +152,7 @@ function MergeTask({
         ))}
       </div>
 
-      <button
-        type="button"
-        className="task-delete"
-        onClick={() => onDeleteTask(task.id)}
-      >
+      <button type="button" className="task-delete" onClick={() => onDeleteTask(task.id)}>
         Delete
       </button>
     </article>

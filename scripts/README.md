@@ -11,6 +11,33 @@ python -m pip install pyinstaller
 
 The DMG contains `PDF N-up Tool.app`, an `Applications` shortcut, `README.md`, and `LICENSE`.
 
+## `build_native_dmg.sh`
+
+Creates a Swift + WKWebView native shell DMG under `dist/`.
+
+```bash
+python -m pip install pyinstaller
+./scripts/build_native_dmg.sh v1.1.0
+```
+
+The DMG contains a macOS app window shell, the bundled PyInstaller backend runtime, an `Applications` shortcut, `README.md`, and `LICENSE`.
+
+## `build_native_app.sh`
+
+Creates the Swift + WKWebView native shell app package under `dist/`.
+
+```bash
+./scripts/build_native_app.sh v1.1.0
+```
+
+## `build_pyinstaller_backend.sh`
+
+Creates the PyInstaller backend runtime used by the native shell.
+
+```bash
+./scripts/build_pyinstaller_backend.sh v1.1.0
+```
+
 ## `package_macos.sh`
 
 Creates the older source-wrapper macOS app preview zip under `dist/`.

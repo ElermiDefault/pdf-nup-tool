@@ -3,8 +3,8 @@ from pathlib import Path
 from fastapi import APIRouter, File, Query, UploadFile
 from fastapi.responses import FileResponse
 
-from app.models.pdf import ExportRequest, PdfInfoResponse, PdfUploadResponse
-from app.services.pdf_exporter import export_pdf_with_rules
+from app.models.pdf import BatchExportRequest, ExportRequest, PdfInfoResponse, PdfUploadResponse
+from app.services.pdf_exporter import export_ordered_pdf_with_rules, export_pdf_with_rules
 from app.services.pdf_store import get_pdf_info, get_pdf_path, save_uploaded_pdf
 from app.services.pdf_thumbnailer import DEFAULT_THUMBNAIL_WIDTH, render_thumbnail
 
@@ -35,6 +35,28 @@ def read_page_thumbnail(
         thumbnail_path,
         media_type="image/png",
         filename=f"{file_id}-p{page_number}.png",
+    )
+
+
+@router.post("/export", response_class=FileResponse)
+def export_ordered_pdf(request: BatchExportRequest) -> FileResponse:
+    source_paths = {}
+    filenames = []
+    for file_id in sorted({page.file_id for page in request.pages}):
+        pdf_info = get_pdf_info(file_id)
+        source_paths[file_id] = get_pdf_path(file_id)
+        filenames.append(pdf_info.filename)
+
+    output_path = export_ordered_pdf_with_rules(source_paths, request)
+    if len(filenames) == 1:
+        download_name = f"{Path(filenames[0]).stem}-nup.pdf"
+    else:
+        download_name = "pdf-nup-export.pdf"
+
+    return FileResponse(
+        output_path,
+        media_type="application/pdf",
+        filename=download_name,
     )
 
 

@@ -1,11 +1,14 @@
+from contextlib import ExitStack
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Mapping
 from uuid import uuid4
 
 import fitz
 from fastapi import HTTPException, status
 
 from app.core.config import EXPORT_DIR
-from app.models.pdf import ExportRequest, MergeRule
+from app.models.pdf import BatchExportRequest, ExportRequest, MergeRule, OrderedMergeRule
 
 
 ALLOWED_LAYOUTS = {2, 3, 4, 5, 8}
@@ -13,19 +16,20 @@ ALLOWED_PAGE_SIZES = {"a4", "a4-landscape", "source"}
 A4_PORTRAIT = (595.0, 842.0)
 
 
+@dataclass(frozen=True)
+class PageReference:
+    file_id: str
+    page_index: int
+
+
 def export_pdf_with_rules(source_path: Path, request: ExportRequest) -> Path:
     EXPORT_DIR.mkdir(parents=True, exist_ok=True)
     output_path = EXPORT_DIR / f"{uuid4().hex}.pdf"
 
     try:
+        _validate_page_size(request.page_size)
         with fitz.open(source_path) as source_doc:
             rules = _validate_rules(request.rules, source_doc.page_count)
-
-            if request.page_size not in ALLOWED_PAGE_SIZES:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="page_size must be 'a4', 'a4-landscape', or 'source'.",
-                )
 
             output_doc = fitz.open()
             try:
@@ -43,6 +47,56 @@ def export_pdf_with_rules(source_path: Path, request: ExportRequest) -> Path:
         ) from exc
 
     return output_path
+
+
+def export_ordered_pdf_with_rules(
+    source_paths: Mapping[str, Path],
+    request: BatchExportRequest,
+) -> Path:
+    EXPORT_DIR.mkdir(parents=True, exist_ok=True)
+    output_path = EXPORT_DIR / f"{uuid4().hex}.pdf"
+
+    try:
+        _validate_page_size(request.page_size)
+        with ExitStack() as stack:
+            source_docs = {
+                file_id: stack.enter_context(fitz.open(source_path))
+                for file_id, source_path in source_paths.items()
+            }
+            page_refs = _validate_page_sequence(request, source_docs)
+            rules = _validate_ordered_rules(request.rules, len(page_refs))
+
+            output_doc = fitz.open()
+            try:
+                _build_ordered_output_pdf(
+                    source_paths=source_paths,
+                    source_docs=source_docs,
+                    output_doc=output_doc,
+                    page_refs=page_refs,
+                    rules=rules,
+                    request=request,
+                )
+                output_doc.save(output_path, garbage=4, deflate=True)
+            finally:
+                output_doc.close()
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to export PDF: {exc}",
+        ) from exc
+
+    return output_path
+
+
+def _validate_page_size(page_size: str) -> None:
+    if page_size not in ALLOWED_PAGE_SIZES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="page_size must be 'a4', 'a4-landscape', or 'source'.",
+        )
 
 
 def _validate_rules(rules: list[MergeRule], page_count: int) -> list[MergeRule]:
@@ -75,6 +129,70 @@ def _validate_rules(rules: list[MergeRule], page_count: int) -> list[MergeRule]:
     return sorted_rules
 
 
+def _validate_page_sequence(
+    request: BatchExportRequest,
+    source_docs: Mapping[str, fitz.Document],
+) -> list[PageReference]:
+    if not request.pages:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="At least one page is required for export.",
+        )
+
+    page_refs = []
+    for sequence_index, item in enumerate(request.pages, start=1):
+        source_doc = source_docs.get(item.file_id)
+        if source_doc is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Page {sequence_index} references an unknown PDF file.",
+            )
+        if item.page_number > source_doc.page_count:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=(
+                    f"Page {sequence_index} references page {item.page_number}, "
+                    f"but that PDF only has {source_doc.page_count} pages."
+                ),
+            )
+        page_refs.append(PageReference(file_id=item.file_id, page_index=item.page_number - 1))
+
+    return page_refs
+
+
+def _validate_ordered_rules(
+    rules: list[OrderedMergeRule],
+    page_count: int,
+) -> list[OrderedMergeRule]:
+    sorted_rules = sorted(rules, key=lambda item: item.start_index)
+    previous_end = 0
+
+    for rule in sorted_rules:
+        if rule.layout not in ALLOWED_LAYOUTS:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unsupported layout {rule.layout}. Use 2, 3, 4, 5, or 8.",
+            )
+        if rule.start_index > rule.end_index:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="start_index must be less than or equal to end_index.",
+            )
+        if rule.end_index > page_count:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Merge rule range exceeds ordered page count {page_count}.",
+            )
+        if rule.start_index <= previous_end:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Merge rules must not overlap.",
+            )
+        previous_end = rule.end_index
+
+    return sorted_rules
+
+
 def _build_output_pdf(
     source_path: Path,
     source_doc: fitz.Document,
@@ -97,6 +215,40 @@ def _build_output_pdf(
             continue
 
         output_doc.insert_pdf(source_doc, from_page=page_index, to_page=page_index)
+        page_index += 1
+
+
+def _build_ordered_output_pdf(
+    source_paths: Mapping[str, Path],
+    source_docs: Mapping[str, fitz.Document],
+    output_doc: fitz.Document,
+    page_refs: list[PageReference],
+    rules: list[OrderedMergeRule],
+    request: BatchExportRequest,
+) -> None:
+    page_index = 0
+    rule_index = 0
+
+    while page_index < len(page_refs):
+        current_rule = rules[rule_index] if rule_index < len(rules) else None
+        current_start = current_rule.start_index - 1 if current_rule else None
+
+        if current_rule and page_index == current_start:
+            _append_ordered_nup_pages(
+                source_paths=source_paths,
+                source_docs=source_docs,
+                output_doc=output_doc,
+                page_refs=page_refs[current_rule.start_index - 1 : current_rule.end_index],
+                rule=current_rule,
+                request=request,
+            )
+            page_index = current_rule.end_index
+            rule_index += 1
+            continue
+
+        page_ref = page_refs[page_index]
+        source_doc = source_docs[page_ref.file_id]
+        output_doc.insert_pdf(source_doc, from_page=page_ref.page_index, to_page=page_ref.page_index)
         page_index += 1
 
 
@@ -144,6 +296,55 @@ def _append_nup_pages(
                     embed_doc.close()
 
 
+def _append_ordered_nup_pages(
+    source_paths: Mapping[str, Path],
+    source_docs: Mapping[str, fitz.Document],
+    output_doc: fitz.Document,
+    page_refs: list[PageReference],
+    rule: OrderedMergeRule,
+    request: BatchExportRequest,
+) -> None:
+    output_width, output_height = _output_page_size_for_reference(
+        source_docs[page_refs[0].file_id],
+        page_refs[0].page_index,
+        request,
+    )
+
+    for chunk_start in range(0, len(page_refs), rule.layout):
+        chunk = page_refs[chunk_start : chunk_start + rule.layout]
+        cells = _layout_cells(
+            layout=rule.layout,
+            page_width=output_width,
+            page_height=output_height,
+            margin=request.margin,
+            gap=request.gap,
+        )
+        output_page = output_doc.new_page(width=output_width, height=output_height)
+        output_page.draw_rect(output_page.rect, color=None, fill=(1, 1, 1), overlay=False)
+
+        for slot_index, page_ref in enumerate(chunk):
+            cell = cells[slot_index]
+            content_rect = _content_rect(cell, request.cell_padding)
+            source_doc = source_docs[page_ref.file_id]
+            embed_doc, embed_page_index, source_rect = _embedding_page(
+                source_paths[page_ref.file_id],
+                source_doc,
+                page_ref.page_index,
+            )
+            target_rect = _fit_rect(source_rect, content_rect)
+            output_page.draw_rect(cell, color=(0.86, 0.86, 0.86), width=0.25)
+            try:
+                output_page.show_pdf_page(
+                    target_rect,
+                    embed_doc,
+                    embed_page_index,
+                    keep_proportion=True,
+                )
+            finally:
+                if embed_doc is not source_doc:
+                    embed_doc.close()
+
+
 def _embedding_page(
     source_path: Path,
     source_doc: fitz.Document,
@@ -164,6 +365,20 @@ def _output_page_size(source_doc: fitz.Document, request: ExportRequest) -> tupl
     if request.page_size == "source":
         first_page_rect = source_doc[0].rect
         return first_page_rect.width, first_page_rect.height
+    if request.page_size == "a4-landscape":
+        return A4_PORTRAIT[1], A4_PORTRAIT[0]
+
+    return A4_PORTRAIT
+
+
+def _output_page_size_for_reference(
+    source_doc: fitz.Document,
+    page_index: int,
+    request: BatchExportRequest,
+) -> tuple[float, float]:
+    if request.page_size == "source":
+        page_rect = source_doc[page_index].rect
+        return page_rect.width, page_rect.height
     if request.page_size == "a4-landscape":
         return A4_PORTRAIT[1], A4_PORTRAIT[0]
 

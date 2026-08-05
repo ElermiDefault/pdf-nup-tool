@@ -8,7 +8,6 @@ import threading
 import time
 import urllib.error
 import urllib.request
-import webbrowser
 from contextlib import suppress
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -18,6 +17,13 @@ BACKEND_PORT = 8010
 LAUNCHER_PORT = 8123
 HEARTBEAT_TIMEOUT_SECONDS = 30
 STARTUP_TIMEOUT_SECONDS = 60
+
+
+def env_flag(name: str, default: bool) -> bool:
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.strip().lower() not in {"0", "false", "no", "off"}
 
 
 class LauncherState:
@@ -44,27 +50,38 @@ class LauncherState:
 def main() -> int:
     resource_dir = resource_root()
     data_dir = user_data_dir()
+    open_browser = env_flag("PDFNUPTOOL_OPEN_BROWSER", True)
+    enable_heartbeat_shutdown = env_flag("PDFNUPTOOL_ENABLE_HEARTBEAT_SHUTDOWN", True)
     configure_stdio(data_dir)
     configure_backend_environment(resource_dir, data_dir)
-    ensure_ports_available([BACKEND_PORT, LAUNCHER_PORT])
+    ports = [BACKEND_PORT]
+    if enable_heartbeat_shutdown:
+        ports.append(LAUNCHER_PORT)
+    ensure_ports_available(ports)
 
     state = LauncherState()
-    heartbeat_server = start_heartbeat_server(state)
+    start_parent_watchdog(state)
+    heartbeat_server = start_heartbeat_server(state) if enable_heartbeat_shutdown else None
     backend_server, backend_thread = start_backend_server()
     backend_url = f"http://{HOST}:{BACKEND_PORT}"
 
     try:
         print("Starting PDF N-up Tool...")
         wait_for_url(f"{backend_url}/health", "backend")
-        print(f"Opening {backend_url}")
-        webbrowser.open(backend_url)
-        print("Close the browser page to stop the local service.")
+        if open_browser:
+            import webbrowser
+
+            print(f"Opening {backend_url}")
+            webbrowser.open(backend_url)
+            print("Close the browser page to stop the local service.")
+        else:
+            print(f"Backend ready at {backend_url}")
 
         while True:
             if not backend_thread.is_alive():
                 print("Backend stopped unexpectedly.")
                 return 1
-            if state.should_stop_for_missing_heartbeat():
+            if enable_heartbeat_shutdown and state.should_stop_for_missing_heartbeat():
                 print("Frontend page appears closed. Shutting down service.")
                 return 0
             with state.lock:
@@ -76,8 +93,9 @@ def main() -> int:
         return 0
     finally:
         state.request_stop()
-        heartbeat_server.shutdown()
-        heartbeat_server.server_close()
+        if heartbeat_server is not None:
+            heartbeat_server.shutdown()
+            heartbeat_server.server_close()
         backend_server.should_exit = True
         backend_thread.join(timeout=5)
 
@@ -142,6 +160,42 @@ def start_backend_server():
     thread = threading.Thread(target=server.run, daemon=True)
     thread.start()
     return server, thread
+
+
+def start_parent_watchdog(state: LauncherState) -> None:
+    parent_pid_text = os.environ.get("PDFNUPTOOL_PARENT_PID")
+    if not parent_pid_text:
+        return
+
+    try:
+        parent_pid = int(parent_pid_text)
+    except ValueError:
+        print(f"Ignoring invalid PDFNUPTOOL_PARENT_PID={parent_pid_text!r}")
+        return
+
+    def watch_parent() -> None:
+        while True:
+            with state.lock:
+                if state.stop_requested:
+                    return
+            if not process_exists(parent_pid):
+                print(f"Parent process {parent_pid} is gone. Shutting down service.")
+                state.request_stop()
+                return
+            time.sleep(1)
+
+    thread = threading.Thread(target=watch_parent, daemon=True)
+    thread.start()
+
+
+def process_exists(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
 
 
 def start_heartbeat_server(state: LauncherState) -> ThreadingHTTPServer:

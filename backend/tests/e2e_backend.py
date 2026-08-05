@@ -11,8 +11,14 @@ BACKEND_DIR = Path(__file__).resolve().parents[1]
 PROJECT_DIR = BACKEND_DIR.parent
 sys.path.insert(0, str(BACKEND_DIR))
 
-from app.models.pdf import ExportRequest, MergeRule  # noqa: E402
-from app.services.pdf_exporter import export_pdf_with_rules  # noqa: E402
+from app.models.pdf import (  # noqa: E402
+    BatchExportRequest,
+    ExportRequest,
+    MergeRule,
+    OrderedMergeRule,
+    PageSequenceItem,
+)
+from app.services.pdf_exporter import export_ordered_pdf_with_rules, export_pdf_with_rules  # noqa: E402
 from app.services.pdf_store import get_pdf_info, get_pdf_path, save_uploaded_pdf  # noqa: E402
 from app.services.pdf_thumbnailer import render_thumbnail  # noqa: E402
 
@@ -45,6 +51,7 @@ def main() -> None:
     export_4up = _export_and_verify_4up(uploaded_pdf)
     export_5up = _export_and_verify_5up(uploaded_pdf)
     export_8up = _export_and_verify_8up(uploaded_pdf)
+    ordered_batch = _export_and_verify_ordered_batch(sample_pdf, upload.file_id, uploaded_pdf)
 
     print("backend e2e ok")
     print(f"file_id={upload.file_id}")
@@ -57,6 +64,7 @@ def main() -> None:
         ("export_4up", export_4up),
         ("export_5up", export_5up),
         ("export_8up", export_8up),
+        ("ordered_batch", ordered_batch),
     ]:
         print(f"{label}={path}")
 
@@ -189,6 +197,44 @@ def _export_and_verify_8up(uploaded_pdf: Path) -> Path:
     preview = PROJECT_DIR / "tmp" / "e2e-8up-page26.png"
     _render_page(output, page_index=25, output_png=preview)
     _assert_a4_page(output, page_index=25)
+
+    return output
+
+
+def _export_and_verify_ordered_batch(
+    sample_pdf: Path,
+    first_file_id: str,
+    first_uploaded_pdf: Path,
+) -> Path:
+    second_upload = asyncio.run(save_uploaded_pdf(FakeUploadFile(sample_pdf)))
+    second_uploaded_pdf = get_pdf_path(second_upload.file_id)
+    request = BatchExportRequest(
+        pages=[
+            PageSequenceItem(file_id=second_upload.file_id, page_number=2),
+            PageSequenceItem(file_id=first_file_id, page_number=1),
+            PageSequenceItem(file_id=first_file_id, page_number=26),
+            PageSequenceItem(file_id=second_upload.file_id, page_number=27),
+            PageSequenceItem(file_id=first_file_id, page_number=28),
+            PageSequenceItem(file_id=second_upload.file_id, page_number=29),
+        ],
+        rules=[OrderedMergeRule(start_index=3, end_index=6, layout=4)],
+        page_size="a4",
+        margin=24,
+        gap=12,
+        cell_padding=6,
+    )
+    output = export_ordered_pdf_with_rules(
+        {
+            first_file_id: first_uploaded_pdf,
+            second_upload.file_id: second_uploaded_pdf,
+        },
+        request,
+    )
+    _assert_pdf(output, expected_pages=3)
+    _assert_a4_page(output, page_index=2)
+
+    preview = PROJECT_DIR / "tmp" / "e2e-ordered-batch-page3.png"
+    _render_page(output, page_index=2, output_png=preview)
 
     return output
 
