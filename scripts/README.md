@@ -22,6 +22,8 @@ python -m pip install pyinstaller
 
 The DMG contains a macOS app window shell, the bundled PyInstaller backend runtime, an `Applications` shortcut, `README.md`, and `LICENSE`.
 
+The native shell defaults to `MACOSX_DEPLOYMENT_TARGET=11.0` for Apple Silicon builds. Override that environment variable before running the script if a different macOS deployment target is required.
+
 ## `build_native_app.sh`
 
 Creates the Swift + WKWebView native shell app package under `dist/`.

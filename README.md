@@ -44,8 +44,9 @@ pdf-nup-tool/
 ## Release App Requirements
 
 - macOS 11+
+- Apple Silicon Mac
 
-The v1.0.0 macOS release app is self-contained. It does not require users to install Python, Node.js, npm, or a virtual environment.
+The macOS release app is self-contained. It does not require users to install Python, Node.js, npm, or a virtual environment.
 
 ## Source Development Requirements
 
@@ -93,6 +94,8 @@ This build is not signed with an Apple Developer ID and is not notarized. If mac
 ## Native WebView App
 
 The project also includes a Swift macOS shell that embeds the existing React UI in `WKWebView`. This keeps the Python/FastAPI/PyMuPDF backend, but the user sees a normal macOS app window instead of a separate browser tab.
+
+The native shell is built for Apple Silicon by default. Its deployment target defaults to macOS 11.0 and can be overridden with `MACOSX_DEPLOYMENT_TARGET`.
 
 Build the native WebView DMG:
 
@@ -258,8 +261,9 @@ pdf-nup-tool/
 ## Release App 环境要求
 
 - macOS 11+
+- Apple Silicon Mac
 
-v1.0.0 macOS 版是自包含应用。普通用户不需要安装 Python、Node.js、npm 或虚拟环境。
+macOS 版是自包含应用。普通用户不需要安装 Python、Node.js、npm 或虚拟环境。
 
 ## 源码开发环境要求
 
@@ -307,6 +311,8 @@ http://127.0.0.1:8010
 ## 原生 WebView App
 
 项目也包含一个 Swift macOS 外壳，把现有 React UI 嵌入 `WKWebView`。它仍然使用 Python/FastAPI/PyMuPDF 后端，但用户看到的是普通 macOS App 窗口，而不是单独打开浏览器标签页。
+
+原生外壳默认面向 Apple Silicon 构建，部署目标默认为 macOS 11.0，可通过 `MACOSX_DEPLOYMENT_TARGET` 覆盖。
 
 构建原生 WebView DMG：
 

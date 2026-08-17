@@ -23,6 +23,8 @@ SWIFT_SOURCES=(
 )
 EXECUTABLE_PATH="$MACOS_DIR/$APP_NAME"
 PYTHON="${PYTHON:-python3}"
+MACOS_DEPLOYMENT_TARGET="${MACOSX_DEPLOYMENT_TARGET:-11.0}"
+SWIFT_TARGET="arm64-apple-macos${MACOS_DEPLOYMENT_TARGET}"
 
 die() {
   echo "Error: $*" >&2
@@ -84,8 +86,11 @@ payload = b"".join(chunks)
 icon_path.write_bytes(b"icns" + struct.pack(">I", len(payload) + 8) + payload)
 PY
 
+export MACOSX_DEPLOYMENT_TARGET="$MACOS_DEPLOYMENT_TARGET"
+
 xcrun swiftc \
   -O \
+  -target "$SWIFT_TARGET" \
   -framework Cocoa \
   -framework WebKit \
   -framework UniformTypeIdentifiers \
